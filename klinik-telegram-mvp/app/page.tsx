@@ -46,7 +46,7 @@ export default function Home() {
         <section className="actions">
           <button onClick={() => setModal(true)}><i>＋</i><div><strong>Daftar Kunjungan</strong><small>Pilih dokter & jadwal</small></div><b>→</b></button>
           <button onClick={() => setPage("antrean")}><i>⌁</i><div><strong>Cek Antrean</strong><small>Lihat posisi antrean</small></div><b>→</b></button>
-          <a href="https://t.me/" target="_blank" rel="noreferrer"><i>➤</i><div><strong>Chat Asisten AI</strong><small>Tanya layanan 24 jam</small></div><b>→</b></a>
+          <a href="https://t.me/KliniksEkaBot" target="_blank" rel="noreferrer"><i>➤</i><div><strong>Chat Asisten AI</strong><small>Tanya layanan 24 jam</small></div><b>→</b></a>
         </section>
         <div className="grid">
           <div className="left">
@@ -55,7 +55,7 @@ export default function Home() {
           </div>
           <aside>
             <section className="card queue"><div className="title-row"><Title eyebrow="ANTREAN HARI INI" title="Posisi Antrean" /><span className="live">● Live</span></div><div className="number"><small>NOMOR ANDA</small><strong>A-017</strong><span>Poli Umum · dr. Nadia Putri</span></div><div className="bar"><i /></div><p className="queue-meta"><span>Sedang dilayani <b>A-012</b></span><span>5 antrean lagi</span></p><div className="estimate">◷ <span><small>Estimasi dipanggil</small><strong>± 35 menit lagi</strong></span></div></section>
-            <section className="assistant"><div><i>✦</i><span><strong>Asisten Sehat AI</strong><small>● Online · respons cepat</small></span></div><p>Halo Aulia! Ada yang bisa saya bantu terkait jadwal, antrean, atau layanan klinik? 👋</p><a href="https://t.me/" target="_blank" rel="noreferrer">Buka Chat Telegram <b>➤</b></a></section>
+            <section className="assistant"><div><i>✦</i><span><strong>Asisten Sehat AI</strong><small>● Online · respons cepat</small></span></div><p>Halo Aulia! Ada yang bisa saya bantu terkait jadwal, antrean, atau layanan klinik? 👋</p><a href="https://t.me/KliniksEkaBot" target="_blank" rel="noreferrer">Buka Chat Telegram <b>➤</b></a></section>
           </aside>
         </div>
       </>}
