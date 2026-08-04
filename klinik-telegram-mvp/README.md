@@ -2,6 +2,18 @@
 
 MVP dashboard klinik dengan antarmuka login, pasien, janji temu, pengaturan bot, serta webhook Telegram. Siap dipasang di Vercel dan menggunakan Supabase sebagai autentikasi/database.
 
+## Variabel Vercel
+
+Tambahkan di **Project Settings → Environment Variables**:
+
+- `GEMINI_API_KEY`: API key dari Google AI Studio.
+- `GEMINI_MODEL`: opsional, default `gemini-2.5-flash`.
+- `N8N_WEBHOOK_URL`: Production URL dari node Webhook n8n.
+- `N8N_WEBHOOK_SECRET`: opsional; dikirim sebagai header `x-kliniks-secret`.
+- `TELEGRAM_BOT_TOKEN` dan `TELEGRAM_WEBHOOK_SECRET`: untuk bot Telegram.
+
+Pendaftaran pasien dikirim ke n8n melalui endpoint server `/api/webhook/n8n`. Chat web dan balasan bot Telegram menggunakan Gemini melalui server, sehingga API key tidak dikirim ke browser.
+
 ## Menjalankan lokal
 
 1. Salin `.env.example` menjadi `.env.local` dan isi nilainya.

@@ -22,6 +22,7 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(false);
   const [modal, setModal] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,7 +47,7 @@ export default function Home() {
         <section className="actions">
           <button onClick={() => setModal(true)}><i>＋</i><div><strong>Daftar Kunjungan</strong><small>Pilih dokter & jadwal</small></div><b>→</b></button>
           <button onClick={() => setPage("antrean")}><i>⌁</i><div><strong>Cek Antrean</strong><small>Lihat posisi antrean</small></div><b>→</b></button>
-          <a href="https://t.me/KliniksEkaBot" target="_blank" rel="noreferrer"><i>➤</i><div><strong>Chat Asisten AI</strong><small>Tanya layanan 24 jam</small></div><b>→</b></a>
+          <button onClick={() => setChatOpen(true)}><i>✦</i><div><strong>Chat Gemini AI</strong><small>Tanya layanan 24 jam</small></div><b>→</b></button>
         </section>
         <div className="grid">
           <div className="left">
@@ -55,7 +56,7 @@ export default function Home() {
           </div>
           <aside>
             <section className="card queue"><div className="title-row"><Title eyebrow="ANTREAN HARI INI" title="Posisi Antrean" /><span className="live">● Live</span></div><div className="number"><small>NOMOR ANDA</small><strong>A-017</strong><span>Poli Umum · dr. Nadia Putri</span></div><div className="bar"><i /></div><p className="queue-meta"><span>Sedang dilayani <b>A-012</b></span><span>5 antrean lagi</span></p><div className="estimate">◷ <span><small>Estimasi dipanggil</small><strong>± 35 menit lagi</strong></span></div></section>
-            <section className="assistant"><div><i>✦</i><span><strong>Asisten Sehat AI</strong><small>● Online · respons cepat</small></span></div><p>Halo Aulia! Ada yang bisa saya bantu terkait jadwal, antrean, atau layanan klinik? 👋</p><a href="https://t.me/KliniksEkaBot" target="_blank" rel="noreferrer">Buka Chat Telegram <b>➤</b></a></section>
+            <section className="assistant"><div><i>✦</i><span><strong>Asisten Gemini AI</strong><small>● Online · respons cepat</small></span></div><p>Halo Aulia! Ada yang bisa saya bantu terkait jadwal, antrean, atau layanan klinik? 👋</p><button onClick={() => setChatOpen(true)}>Mulai Chat AI <b>→</b></button><a href="https://t.me/KliniksEkaBot" target="_blank" rel="noreferrer">Buka Telegram <b>➤</b></a></section>
           </aside>
         </div>
       </>}
@@ -63,6 +64,7 @@ export default function Home() {
 
     <nav className="mobile-nav">{[["beranda","⌂","Beranda"],["daftar","＋","Daftar"],["antrean","⌁","Antrean"],["riwayat","▤","Riwayat"]].map(([id,icon,label]) => <button key={id} onClick={() => { setPage(id as Page); if (id === "daftar") setModal(true); }}><span>{icon}</span>{label}</button>)}</nav>
     {modal && <Booking success={success} onClose={() => { setModal(false); setSuccess(false); }} onSubmit={() => setSuccess(true)} />}
+    {chatOpen && <AiChat onClose={() => setChatOpen(false)} />}
   </main>;
 }
 
@@ -75,4 +77,17 @@ function Title({ eyebrow, title }: { eyebrow: string; title: string }) { return 
 
 function History() { return <section className="history"><div className="history-head"><Title eyebrow="REKAM MEDIS PASIEN" title="Riwayat Pengobatan" /><button>Unduh Riwayat ↓</button></div><p>Catatan kunjungan, diagnosis, tindakan, dan resep obat Anda.</p><div className="summary"><span>AR</span><div><small>Nama Pasien</small><strong>Aulia Rahman</strong><i>No. BPJS ·•••• 4281</i></div><div><small>Golongan Darah</small><strong>O+</strong></div><div><small>Alergi</small><strong>Penisilin</strong></div></div><div className="history-list">{histories.map((item) => <article key={item.month}><div className="history-date"><strong>{item.date}</strong><span>{item.month}</span></div><div className="history-body"><span className="tag">{item.clinic}</span><span className="done">Selesai</span><h3>{item.title}</h3><p><b>Dokter:</b> {item.doctor}</p><div className="details"><div><small>Keluhan</small><p>{item.complaint}</p></div><div><small>Tindakan</small><p>{item.action}</p></div><div><small>Resep Obat</small><p>{item.medicine}</p></div><div><small>Catatan Dokter</small><p>{item.note}</p></div></div></div></article>)}</div></section>; }
 
-function Booking({ success, onClose, onSubmit }: { success: boolean; onClose: () => void; onSubmit: () => void }) { return <div className="backdrop" onMouseDown={onClose}><section className="modal" onMouseDown={(event) => event.stopPropagation()}><button className="close" onClick={onClose}>×</button>{success ? <div className="success"><i>✓</i><h2>Pendaftaran berhasil!</h2><p>Nomor antrean dan pengingat jadwal akan dikirim melalui Telegram.</p><button onClick={onClose}>Kembali ke Beranda</button></div> : <><p className="modal-kicker">PENDAFTARAN ONLINE</p><h2>Buat Jadwal Kunjungan</h2><p>Pilih layanan dan waktu yang paling nyaman.</p><form onSubmit={(event) => { event.preventDefault(); onSubmit(); }}><label>Poliklinik<select required defaultValue=""><option value="" disabled>Pilih poliklinik</option>{services.map((service) => <option key={service[1]}>{service[1]}</option>)}</select></label><label>Dokter<select required defaultValue=""><option value="" disabled>Pilih dokter</option><option>dr. Nadia Putri</option><option>dr. Reza Mahendra</option><option>drg. Amalia Sari</option></select></label><div><label>Tanggal<input type="date" required /></label><label>Jam<select required defaultValue=""><option value="" disabled>Pilih jam</option><option>08:00</option><option>09:00</option><option>10:30</option></select></label></div><label>Keluhan singkat<textarea placeholder="Tuliskan keluhan utama Anda..." /></label><button>Konfirmasi Pendaftaran <b>→</b></button></form></>}</section></div>; }
+function Booking({ success, onClose, onSubmit }: { success: boolean; onClose: () => void; onSubmit: () => void }) { return <div className="backdrop" onMouseDown={onClose}><section className="modal" onMouseDown={(event) => event.stopPropagation()}><button className="close" onClick={onClose}>×</button>{success ? <div className="success"><i>✓</i><h2>Pendaftaran berhasil!</h2><p>Nomor antrean dan pengingat jadwal akan dikirim melalui Telegram.</p><button onClick={onClose}>Kembali ke Beranda</button></div> : <><p className="modal-kicker">PENDAFTARAN ONLINE</p><h2>Buat Jadwal Kunjungan</h2><p>Pilih layanan dan waktu yang paling nyaman.</p><form onSubmit={async (event) => { event.preventDefault(); const data = Object.fromEntries(new FormData(event.currentTarget)); await fetch("/api/webhook/n8n", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ event: "appointment.created", patient: "Aulia Rahman", bpjsLast4: "4281", ...data }) }).catch(() => null); onSubmit(); }}><label>Poliklinik<select name="clinic" required defaultValue=""><option value="" disabled>Pilih poliklinik</option>{services.map((service) => <option key={service[1]}>{service[1]}</option>)}</select></label><label>Dokter<select name="doctor" required defaultValue=""><option value="" disabled>Pilih dokter</option><option>dr. Nadia Putri</option><option>dr. Reza Mahendra</option><option>drg. Amalia Sari</option></select></label><div><label>Tanggal<input name="date" type="date" required /></label><label>Jam<select name="time" required defaultValue=""><option value="" disabled>Pilih jam</option><option>08:00</option><option>09:00</option><option>10:30</option></select></label></div><label>Keluhan singkat<textarea name="complaint" placeholder="Tuliskan keluhan utama Anda..." /></label><button>Konfirmasi Pendaftaran <b>→</b></button></form></>}</section></div>; }
+
+function AiChat({ onClose }: { onClose: () => void }) {
+  const [messages, setMessages] = useState([{ role: "ai", text: "Halo! Saya Asisten Gemini Klinik Sehat. Ada yang bisa saya bantu?" }]);
+  const [loading, setLoading] = useState(false);
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); const message = String(data.get("message") || "").trim(); if (!message || loading) return;
+    setMessages((items) => [...items, { role: "user", text: message }]); form.reset(); setLoading(true);
+    try { const response = await fetch("/api/ai/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message }) }); const json = await response.json() as { answer?: string; error?: string }; setMessages((items) => [...items, { role: "ai", text: json.answer || json.error || "Maaf, terjadi gangguan." }]); }
+    catch { setMessages((items) => [...items, { role: "ai", text: "Maaf, Asisten AI sedang tidak tersedia." }]); }
+    finally { setLoading(false); }
+  }
+  return <div className="backdrop" onMouseDown={onClose}><section className="ai-chat" onMouseDown={(event) => event.stopPropagation()}><header><div><i>✦</i><span><strong>Asisten Gemini AI</strong><small>Informasi kesehatan & layanan klinik</small></span></div><button onClick={onClose}>×</button></header><div className="chat-messages">{messages.map((item, index) => <p key={index} className={item.role}>{item.text}</p>)}{loading && <p className="ai">Sedang mengetik…</p>}</div><form onSubmit={submit}><input name="message" maxLength={1500} placeholder="Tulis pertanyaan Anda…" aria-label="Pesan untuk Asisten Gemini" required /><button disabled={loading}>Kirim</button></form><small className="chat-note">AI dapat keliru. Untuk keadaan darurat hubungi 119 atau IGD terdekat.</small></section></div>;
+}
