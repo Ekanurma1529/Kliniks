@@ -1,90 +1,78 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 
-type View = "dashboard" | "pasien" | "janji" | "telegram" | "pengaturan";
+type Page = "beranda" | "daftar" | "antrean" | "riwayat";
 
-const nav: { id: View; label: string; icon: string }[] = [
-  { id: "dashboard", label: "Dashboard", icon: "▦" },
-  { id: "pasien", label: "Pasien", icon: "♙" },
-  { id: "janji", label: "Janji Temu", icon: "▣" },
-  { id: "telegram", label: "Pesan Telegram", icon: "➤" },
-  { id: "pengaturan", label: "Pengaturan", icon: "⚙" },
+const services = [
+  ["✚", "Poli Umum", "Pemeriksaan umum"],
+  ["◉", "Poli Gigi", "Perawatan gigi"],
+  ["♡", "Poli Anak", "Kesehatan anak"],
+  ["✦", "Poli Kandungan", "Ibu & kandungan"],
 ];
 
-const patients = [
-  ["PS-001", "Anita Rahmawati", "0812 4455 8821", "Periksa umum", "Aktif"],
-  ["PS-002", "Dewi Lestari", "0857 1109 3321", "Kontrol", "Aktif"],
-  ["PS-003", "Fajar Pratama", "0813 9981 2400", "Konsultasi", "Baru"],
-  ["PS-004", "Rina Handayani", "0821 5510 7734", "Pemeriksaan", "Aktif"],
-];
-
-const appointments = [
-  ["08:00", "Anita Rahmawati", "dr. Budi Santoso", "Selesai"],
-  ["09:30", "Dewi Lestari", "dr. Budi Santoso", "Selesai"],
-  ["11:00", "Fajar Pratama", "dr. Siti Aisyah", "Berlangsung"],
-  ["13:00", "Rina Handayani", "dr. Siti Aisyah", "Menunggu"],
-  ["14:30", "Agus Setiawan", "dr. Budi Santoso", "Menunggu"],
+const histories = [
+  { date: "18", month: "JUL 2026", clinic: "Poli Umum", title: "Infeksi Saluran Pernapasan Akut", doctor: "dr. Nadia Putri", complaint: "Batuk, pilek, dan demam selama tiga hari.", action: "Pemeriksaan fisik dan tekanan darah.", medicine: "Paracetamol 500 mg · 3×1\nAmbroxol 30 mg · 3×1", note: "Istirahat cukup dan kontrol jika demam berlanjut." },
+  { date: "02", month: "MEI 2026", clinic: "Poli Gigi", title: "Karies Gigi Geraham", doctor: "drg. Amalia Sari", complaint: "Nyeri pada gigi geraham kanan bawah.", action: "Pembersihan dan penambalan sementara.", medicine: "Asam mefenamat 500 mg · bila nyeri", note: "Kontrol kembali 09 Mei 2026." },
 ];
 
 export default function Home() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [view, setView] = useState<View>("dashboard");
+  const [page, setPage] = useState<Page>("beranda");
+  const [showPassword, setShowPassword] = useState(false);
   const [modal, setModal] = useState(false);
-  const [toast, setToast] = useState("");
-  const [botActive, setBotActive] = useState(true);
+  const [success, setSuccess] = useState(false);
 
-  function notify(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(""), 2600);
+  function login(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const bpjs = String(data.get("bpjs") ?? "").replace(/\D/g, "");
+    const password = String(data.get("password") ?? "");
+    if (bpjs.length >= 8 && password.length >= 6) setLoggedIn(true);
   }
 
-  if (!loggedIn) return <Login onLogin={() => setLoggedIn(true)} />;
+  if (!loggedIn) return <Login onSubmit={login} showPassword={showPassword} togglePassword={() => setShowPassword((value) => !value)} />;
 
-  return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand"><span className="brand-mark">✚</span><div><strong>Klinik Sehat</strong><small>Melayani dengan hati</small></div></div>
-        <nav>{nav.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav>
-        <div className="account"><span className="avatar">A</span><div><strong>Admin Klinik</strong><small>Administrator</small></div><button onClick={() => setLoggedIn(false)} title="Keluar">↗</button></div>
-      </aside>
-      <main className="main">
-        <header className="topbar"><div><p className="eyebrow">KLINIK SEHAT • ADMIN</p><h1>{view === "dashboard" ? "Selamat datang, Admin" : nav.find((n) => n.id === view)?.label}</h1><p>Kelola layanan klinik dan komunikasi pasien dalam satu tempat.</p></div><button className="primary" onClick={() => setModal(true)}>＋ Tambah Pasien</button></header>
+  return <main className="portal">
+    <header className="header">
+      <Logo />
+      <nav>{[["beranda","Beranda"],["daftar","Pendaftaran"],["antrean","Antrean Saya"],["riwayat","Riwayat Pengobatan"]].map(([id,label]) => <button key={id} className={page === id ? "active" : ""} onClick={() => { setPage(id as Page); if (id === "daftar") setModal(true); }}>{label}</button>)}</nav>
+      <div className="profile"><span>AR</span><div><strong>Aulia Rahman</strong><small>BPJS ·•••• 4281</small></div><button onClick={() => setLoggedIn(false)}>↪</button></div>
+    </header>
 
-        {view === "dashboard" && <Dashboard botActive={botActive} onAppointments={() => setView("janji")} onTelegram={() => setView("telegram")} />}
-        {view === "pasien" && <Patients />}
-        {view === "janji" && <Appointments />}
-        {view === "telegram" && <Telegram botActive={botActive} setBotActive={setBotActive} notify={notify} />}
-        {view === "pengaturan" && <Settings notify={notify} />}
-      </main>
-      {modal && <PatientModal onClose={() => setModal(false)} onSave={() => { setModal(false); notify("Pasien baru berhasil disimpan"); }} />}
-      {toast && <div className="toast">✓ {toast}</div>}
+    <div className="content">
+      {page === "riwayat" ? <History /> : <>
+        <section className="hero"><div><p>SELAMAT DATANG KEMBALI</p><h1>Halo, Aulia 👋</h1><span>Bagaimana kabar Anda hari ini? Kami siap membantu kebutuhan kesehatan Anda.</span></div><div className="date"><small>Selasa</small><strong>04</strong><span>Agustus 2026</span></div></section>
+        <section className="actions">
+          <button onClick={() => setModal(true)}><i>＋</i><div><strong>Daftar Kunjungan</strong><small>Pilih dokter & jadwal</small></div><b>→</b></button>
+          <button onClick={() => setPage("antrean")}><i>⌁</i><div><strong>Cek Antrean</strong><small>Lihat posisi antrean</small></div><b>→</b></button>
+          <a href="https://t.me/" target="_blank" rel="noreferrer"><i>➤</i><div><strong>Chat Asisten AI</strong><small>Tanya layanan 24 jam</small></div><b>→</b></a>
+        </section>
+        <div className="grid">
+          <div className="left">
+            <section className="card"><Title eyebrow="LAYANAN KAMI" title="Pilih Poliklinik" /><div className="services">{services.map(([icon,title,note]) => <button key={title} onClick={() => setModal(true)}><i>{icon}</i><strong>{title}</strong><small>{note}</small><b>→</b></button>)}</div></section>
+            <section className="card"><div className="title-row"><Title eyebrow="JADWAL ANDA" title="Kunjungan Mendatang" /><span className="confirmed">✓ Terkonfirmasi</span></div><div className="appointment"><div className="day"><strong>06</strong><span>AGU</span></div><div className="doctor">NP</div><div><small>Poli Umum</small><strong>dr. Nadia Putri</strong><span>Kamis, 06 Agustus 2026 · 09:00 WIB</span></div><button>Detail</button></div></section>
+          </div>
+          <aside>
+            <section className="card queue"><div className="title-row"><Title eyebrow="ANTREAN HARI INI" title="Posisi Antrean" /><span className="live">● Live</span></div><div className="number"><small>NOMOR ANDA</small><strong>A-017</strong><span>Poli Umum · dr. Nadia Putri</span></div><div className="bar"><i /></div><p className="queue-meta"><span>Sedang dilayani <b>A-012</b></span><span>5 antrean lagi</span></p><div className="estimate">◷ <span><small>Estimasi dipanggil</small><strong>± 35 menit lagi</strong></span></div></section>
+            <section className="assistant"><div><i>✦</i><span><strong>Asisten Sehat AI</strong><small>● Online · respons cepat</small></span></div><p>Halo Aulia! Ada yang bisa saya bantu terkait jadwal, antrean, atau layanan klinik? 👋</p><a href="https://t.me/" target="_blank" rel="noreferrer">Buka Chat Telegram <b>➤</b></a></section>
+          </aside>
+        </div>
+      </>}
     </div>
-  );
+
+    <nav className="mobile-nav">{[["beranda","⌂","Beranda"],["daftar","＋","Daftar"],["antrean","⌁","Antrean"],["riwayat","▤","Riwayat"]].map(([id,icon,label]) => <button key={id} onClick={() => { setPage(id as Page); if (id === "daftar") setModal(true); }}><span>{icon}</span>{label}</button>)}</nav>
+    {modal && <Booking success={success} onClose={() => { setModal(false); setSuccess(false); }} onSubmit={() => setSuccess(true)} />}
+  </main>;
 }
 
-function Login({ onLogin }: { onLogin: () => void }) {
-  const [loading, setLoading] = useState(false);
-  function submit(e: FormEvent) { e.preventDefault(); setLoading(true); window.setTimeout(onLogin, 550); }
-  return <main className="login-page"><section className="login-art"><div className="login-brand"><span className="brand-mark">✚</span><div><strong>Klinik Sehat</strong><small>Panel layanan terpadu</small></div></div><div className="art-copy"><span className="pill">● Telegram bot siap membantu</span><h1>Layanan klinik lebih cepat, rapi, dan responsif.</h1><p>Kelola pasien, janji temu, dan pesan otomatis dari satu dashboard yang aman.</p></div><div className="art-stats"><div><b>98%</b><span>Respons bot</span></div><div><b>24/7</b><span>Layanan pesan</span></div><div><b>1.248</b><span>Pasien terdata</span></div></div></section><section className="login-panel"><form onSubmit={submit}><span className="mobile-logo">✚</span><p className="eyebrow">SELAMAT DATANG</p><h2>Masuk ke akun klinik</h2><p className="muted">Gunakan akun admin yang terdaftar di Supabase.</p><label>Email<input type="email" defaultValue="admin@kliniksehat.id" required /></label><label>Kata sandi<input type="password" defaultValue="demo1234" required /></label><div className="login-row"><label className="check"><input type="checkbox" defaultChecked /> Ingat saya</label><a href="#">Lupa kata sandi?</a></div><button className="primary login-button" disabled={loading}>{loading ? "Memverifikasi..." : "Masuk ke Dashboard"}</button><p className="demo-note">Mode demo aktif — klik masuk untuk melihat dashboard.</p></form></section></main>;
+function Login({ onSubmit, showPassword, togglePassword }: { onSubmit: (event: FormEvent<HTMLFormElement>) => void; showPassword: boolean; togglePassword: () => void }) {
+  return <main className="login"><section className="login-art"><Logo light /><div><p>LAYANAN KESEHATAN DIGITAL</p><h1>Lebih dekat dengan<br />kesehatan Anda.</h1><span>Daftar kunjungan, cek antrean, riwayat pengobatan, dan konsultasi AI dalam satu tempat.</span><aside><b>24/7<small>Asisten AI</small></b><b>4<small>Poliklinik</small></b><b>~3 dtk<small>Respons cepat</small></b></aside></div></section><section className="login-panel"><form onSubmit={onSubmit}><div className="mobile-logo"><Logo /></div><em>✓ Portal Pasien Aman</em><h2>Selamat datang</h2><p>Masuk menggunakan nomor kartu BPJS dan kata sandi Anda.</p><label>Nomor Kartu BPJS<div className="field"><span>BPJS</span><input name="bpjs" aria-label="Nomor Kartu BPJS" inputMode="numeric" minLength={8} placeholder="Masukkan nomor kartu BPJS" required /></div></label><small>Nomor BPJS terdiri dari 13 digit angka</small><div className="password-label"><label>Kata Sandi</label><a href="#">Lupa kata sandi?</a></div><div className="field password"><span>●</span><input name="password" aria-label="Kata Sandi" type={showPassword ? "text" : "password"} minLength={6} placeholder="Masukkan kata sandi" required /><button type="button" onClick={togglePassword}>{showPassword ? "◉" : "◎"}</button></div><small>Minimal 6 karakter</small><button className="login-button">Masuk ke Portal <b>→</b></button><p className="safe">🔒 Data Anda dilindungi dan digunakan hanya untuk pelayanan kesehatan.</p></form></section></main>;
 }
 
-function Dashboard({ botActive, onAppointments, onTelegram }: { botActive: boolean; onAppointments: () => void; onTelegram: () => void }) {
-  return <><section className="stats"><Stat icon="♟" label="Total Pasien" value="1.248" note="+24 dari minggu lalu" tone="blue" /><Stat icon="▣" label="Janji Hari Ini" value="18" note="+5 dari kemarin" tone="cyan" /><Stat icon="▤" label="Pesan Bot" value="256" note="+36 dari kemarin" tone="green" /></section><section className="dashboard-grid"><article className="card schedule"><div className="card-head"><div><p className="eyebrow">OPERASIONAL</p><h2>Jadwal Hari Ini</h2></div><button className="link" onClick={onAppointments}>Lihat semua</button></div><AppointmentTable compact /></article><article className="card bot-card"><div className="card-head"><div><p className="eyebrow">AUTOMASI</p><h2>Bot Telegram</h2></div><span className={botActive ? "status online" : "status"}>{botActive ? "● Aktif" : "● Nonaktif"}</span></div><div className="telegram-hero"><span className="telegram-logo">➤</span><div><strong>{botActive ? "Terhubung dan merespons" : "Bot sedang dinonaktifkan"}</strong><p>Webhook aman dan balasan otomatis berjalan normal.</p></div></div><div className="mini-stats"><div><b>256</b><span>Pesan hari ini</span></div><div><b>28</b><span>Pengguna baru</span></div><div><b>98%</b><span>Tingkat respons</span></div></div><div className="reply"><span>Balasan otomatis terbaru</span><p>“Terima kasih telah menghubungi Klinik Sehat. Silakan sebutkan nama dan kebutuhan Anda.”</p></div><button className="secondary full" onClick={onTelegram}>Kelola Bot Telegram</button></article></section></>;
-}
+function Logo({ light = false }: { light?: boolean }) { return <div className={`logo ${light ? "light" : ""}`}><span>✦</span><div><strong>Klinik Sehat</strong><small>Care in every moment</small></div></div>; }
+function Title({ eyebrow, title }: { eyebrow: string; title: string }) { return <div className="section-title"><small>{eyebrow}</small><h2>{title}</h2></div>; }
 
-function Stat({ icon, label, value, note, tone }: { icon: string; label: string; value: string; note: string; tone: string }) { return <article className="stat-card"><span className={`stat-icon ${tone}`}>{icon}</span><div><span>{label}</span><b>{value}</b><small>{note}</small></div><span className="trend">↗</span></article>; }
+function History() { return <section className="history"><div className="history-head"><Title eyebrow="REKAM MEDIS PASIEN" title="Riwayat Pengobatan" /><button>Unduh Riwayat ↓</button></div><p>Catatan kunjungan, diagnosis, tindakan, dan resep obat Anda.</p><div className="summary"><span>AR</span><div><small>Nama Pasien</small><strong>Aulia Rahman</strong><i>No. BPJS ·•••• 4281</i></div><div><small>Golongan Darah</small><strong>O+</strong></div><div><small>Alergi</small><strong>Penisilin</strong></div></div><div className="history-list">{histories.map((item) => <article key={item.month}><div className="history-date"><strong>{item.date}</strong><span>{item.month}</span></div><div className="history-body"><span className="tag">{item.clinic}</span><span className="done">Selesai</span><h3>{item.title}</h3><p><b>Dokter:</b> {item.doctor}</p><div className="details"><div><small>Keluhan</small><p>{item.complaint}</p></div><div><small>Tindakan</small><p>{item.action}</p></div><div><small>Resep Obat</small><p>{item.medicine}</p></div><div><small>Catatan Dokter</small><p>{item.note}</p></div></div></div></article>)}</div></section>; }
 
-function AppointmentTable({ compact = false }: { compact?: boolean }) { const data = compact ? appointments : [...appointments, ["16:00", "Citra Devina", "dr. Siti Aisyah", "Terjadwal"]]; return <div className="table-wrap"><table><thead><tr><th>Waktu</th><th>Pasien</th><th>Dokter</th><th>Status</th></tr></thead><tbody>{data.map((row) => <tr key={row[0]}>{row.map((cell, i) => <td key={cell}>{i === 3 ? <span className={`tag ${cell.toLowerCase()}`}>{cell}</span> : cell}</td>)}</tr>)}</tbody></table></div>; }
-function Patients() { return <section className="card page-card"><div className="card-head"><div><p className="eyebrow">DATABASE PASIEN</p><h2>Daftar Pasien</h2></div><input className="search" placeholder="Cari nama pasien…" /></div><div className="table-wrap"><table><thead><tr><th>ID</th><th>Nama</th><th>Telepon</th><th>Kunjungan</th><th>Status</th></tr></thead><tbody>{patients.map((r) => <tr key={r[0]}>{r.map((c, i) => <td key={c}>{i === 4 ? <span className="tag selesai">{c}</span> : c}</td>)}</tr>)}</tbody></table></div></section>; }
-function Appointments() { return <section className="card page-card"><div className="card-head"><div><p className="eyebrow">3 AGUSTUS 2026</p><h2>Jadwal Janji Temu</h2></div><button className="secondary">＋ Buat Jadwal</button></div><AppointmentTable /></section>; }
-
-function Telegram({ botActive, setBotActive, notify }: { botActive: boolean; setBotActive: (v: boolean) => void; notify: (s: string) => void }) {
-  const [answer, setAnswer] = useState("Terima kasih telah menghubungi Klinik Sehat. Admin kami akan segera membantu. Untuk membuat janji, kirim: JANJI [nama] [tanggal].");
-  const chars = useMemo(() => answer.length, [answer]);
-  return <section className="settings-grid"><article className="card page-card"><div className="card-head"><div><p className="eyebrow">KONEKSI</p><h2>Bot Telegram</h2></div><label className="switch"><input type="checkbox" checked={botActive} onChange={(e) => setBotActive(e.target.checked)} /><span /></label></div><div className="connection"><span className="telegram-logo">➤</span><div><b>@KlinikSehatBot</b><p className="muted">Webhook terhubung • pemeriksaan terakhir baru saja</p></div><span className={botActive ? "status online" : "status"}>{botActive ? "● Aktif" : "● Nonaktif"}</span></div><label>Balasan otomatis<textarea rows={6} value={answer} onChange={(e) => setAnswer(e.target.value)} /><small className="field-note">{chars}/1000 karakter</small></label><div className="actions"><button className="primary" onClick={() => notify("Pengaturan bot berhasil disimpan")}>Simpan Perubahan</button><button className="secondary" onClick={() => notify("Pesan uji berhasil dikirim")}>Kirim Pesan Uji</button></div></article><article className="card side-help"><p className="eyebrow">ALUR PESAN</p><h2>Respons otomatis</h2><ol><li><b>Pasien mengirim pesan</b><span>Telegram meneruskan pesan ke webhook.</span></li><li><b>Sistem membaca pengaturan</b><span>Supabase menyimpan template balasan.</span></li><li><b>Bot membalas otomatis</b><span>Respons dikirim dalam hitungan detik.</span></li></ol></article></section>;
-}
-
-function Settings({ notify }: { notify: (s: string) => void }) { return <section className="card page-card form-card"><p className="eyebrow">PROFIL KLINIK</p><h2>Pengaturan Umum</h2><div className="form-grid"><label>Nama klinik<input defaultValue="Klinik Sehat" /></label><label>Nomor telepon<input defaultValue="021 555 0198" /></label><label>Email<input defaultValue="admin@kliniksehat.id" /></label><label>Jam operasional<input defaultValue="Senin–Sabtu, 08:00–20:00" /></label></div><label>Alamat<textarea rows={3} defaultValue="Jl. Kesehatan No. 28, Jakarta" /></label><button className="primary" onClick={() => notify("Profil klinik berhasil diperbarui")}>Simpan Pengaturan</button></section>; }
-
-function PatientModal({ onClose, onSave }: { onClose: () => void; onSave: () => void }) { return <div className="modal-backdrop" onMouseDown={onClose}><form className="modal" onSubmit={(e) => { e.preventDefault(); onSave(); }} onMouseDown={(e) => e.stopPropagation()}><div className="card-head"><div><p className="eyebrow">DATA BARU</p><h2>Tambah Pasien</h2></div><button type="button" className="close" onClick={onClose}>×</button></div><label>Nama lengkap<input required placeholder="Contoh: Siti Rahma" /></label><div className="form-grid"><label>Nomor telepon<input required placeholder="08xx xxxx xxxx" /></label><label>Tanggal lahir<input type="date" required /></label></div><label>Keluhan awal<textarea rows={3} placeholder="Tuliskan keluhan singkat pasien" /></label><div className="actions"><button type="button" className="secondary" onClick={onClose}>Batal</button><button className="primary">Simpan Pasien</button></div></form></div>; }
+function Booking({ success, onClose, onSubmit }: { success: boolean; onClose: () => void; onSubmit: () => void }) { return <div className="backdrop" onMouseDown={onClose}><section className="modal" onMouseDown={(event) => event.stopPropagation()}><button className="close" onClick={onClose}>×</button>{success ? <div className="success"><i>✓</i><h2>Pendaftaran berhasil!</h2><p>Nomor antrean dan pengingat jadwal akan dikirim melalui Telegram.</p><button onClick={onClose}>Kembali ke Beranda</button></div> : <><p className="modal-kicker">PENDAFTARAN ONLINE</p><h2>Buat Jadwal Kunjungan</h2><p>Pilih layanan dan waktu yang paling nyaman.</p><form onSubmit={(event) => { event.preventDefault(); onSubmit(); }}><label>Poliklinik<select required defaultValue=""><option value="" disabled>Pilih poliklinik</option>{services.map((service) => <option key={service[1]}>{service[1]}</option>)}</select></label><label>Dokter<select required defaultValue=""><option value="" disabled>Pilih dokter</option><option>dr. Nadia Putri</option><option>dr. Reza Mahendra</option><option>drg. Amalia Sari</option></select></label><div><label>Tanggal<input type="date" required /></label><label>Jam<select required defaultValue=""><option value="" disabled>Pilih jam</option><option>08:00</option><option>09:00</option><option>10:30</option></select></label></div><label>Keluhan singkat<textarea placeholder="Tuliskan keluhan utama Anda..." /></label><button>Konfirmasi Pendaftaran <b>→</b></button></form></>}</section></div>; }
